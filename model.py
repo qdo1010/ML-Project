@@ -6,7 +6,7 @@ from keras.layers import Convolution2D, MaxPooling2D
 from keras.layers import GlobalAveragePooling2D
 
 #(224,224) in prev version
-def SqueezeNet(nb_classes, inputs=(3, 32, 32)):
+def SqueezeNet(nb_classes, inputs=(3, 224, 224)):
     """ Keras Implementation of SqueezeNet(arXiv 1602.07360)
 
     @param nb_classes: total number of final categories

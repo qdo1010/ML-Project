@@ -1,3 +1,4 @@
+import cv2
 import time
 import matplotlib.pyplot as plt
 import numpy as np
@@ -8,11 +9,12 @@ from keras.layers import Dropout
 from keras.layers import Flatten
 from keras.constraints import maxnorm
 from keras.optimizers import SGD
-from keras.layers import Activation
+from keras.layers import Activation,Lambda
 from keras.layers.convolutional import Conv2D
 from keras.layers.convolutional import MaxPooling2D
 from keras.layers.normalization import BatchNormalization
 from keras.utils import np_utils
+
 #from keras_sequential_ascii import sequential_model_to_ascii_printout
 from keras import backend as K
 if K.backend()=='tensorflow':
@@ -25,13 +27,20 @@ import multiprocessing as mp
 # Loading the CIFAR-10 datasets
 from keras.datasets import cifar10
 
-batch_size = 32
+batch_size = 64
 
 num_classes = 10
-epochs = 100
+epochs = 50
 
-sgd = SGD(lr=0.1, decay=0.0002, momentum=0.9)
+sgd = SGD(lr=0.001, decay=0.0002, momentum=0.9)
 (x_train, y_train), (x_test, y_test) = cifar10.load_data() 
+print x_train.shape
+print y_train.shape
+print x_test.shape
+print y_test.shape
+
+
+
 # x_train - training data(images), y_train - labels(digits)
 
 class_names = ['airplane','automobile','bird','cat','deer','dog','frog','horse','ship','truck']
@@ -69,9 +78,22 @@ x_train  /= 255
 x_test /= 255
 
 
+x_t = np.zeros((50000, 3, 224, 224))
+for i, img in enumerate(x_train):
+    im = img.reshape((32, 32, 3))
+    large_img = cv2.resize(im, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
+    x_t[i] = large_img.reshape((3,224,224))
+#for i in range(0,5000)
+x_te = np.zeros((50000, 3, 224, 224))
+for i, img in enumerate(x_test):
+    im = img.reshape((32, 32, 3))
+    large_img = cv2.resize(im, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
+    x_te[i] = large_img.reshape((3,224,244))
+
 t0 = time.time()
 nb_class = 10
-model = km.SqueezeNet(nb_class, inputs=(3, 32, 32))
+#out = Lambda(lambda image: tf.image.resize_images(image, (2,224, 224)))(inp)
+model = km.SqueezeNet(nb_class, inputs=(3, 224, 224))
         # dp.visualize_model(model)
 t0 = print_time(t0, 'build the model')
 
@@ -79,7 +101,7 @@ model.compile(optimizer=sgd, loss='categorical_crossentropy',metrics=['accuracy'
 t0 = print_time(t0, 'compile model')
 
 #model.fit_generator(train_generator,samples_per_epoch=nb_train_samples,nb_epoch=args.epochs,validation_data=validation_generator,nb_val_samples=nb_val_samples)
-model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, validation_data=(x_test,y_test),shuffle=True)
+model.fit(x_t, y_train, batch_size=batch_size, epochs=epochs, validation_data=(x_te,y_test),shuffle=True)
 t0 = print_time(t0, 'train model')
 
 plt.figure(0)
